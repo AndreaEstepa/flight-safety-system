@@ -1,4 +1,3 @@
-
 with Kernel.Serial_Output; use Kernel.Serial_Output;
 with Ada.Real_Time; use Ada.Real_Time;
 with System; use System;
@@ -7,14 +6,14 @@ with Tools; use Tools;
 with devicesFSS_V1; use devicesFSS_V1;
 
 -- NO ACTIVAR ESTE PAQUETE MIENTRAS NO SE TENGA PROGRAMADA LA INTERRUPCION
--- Packages needed to generate button interrupts       
+-- Packages needed to generate button interrupts
 -- with Ada.Interrupts.Names;
 -- with Button_Interrupt; use Button_Interrupt;
 
-package body fss is 
+package body fss is
 
     ----------------------------------------------------------------------
-    ------------- procedure exported 
+    ------------- procedure exported
     ----------------------------------------------------------------------
     procedure Background is
     begin
@@ -25,14 +24,18 @@ package body fss is
     ----------------------------------------------------------------------
 
     -----------------------------------------------------------------------
-    ------------- declaration of protected objects 
+    ------------- declaration of protected objects
     -----------------------------------------------------------------------
 
-    -- Aqui se declaran los objetos protegidos para los datos compartidos  
+    protected Datos is
+
+    private
+    end Datos;
+
 
 
     -----------------------------------------------------------------------
-    ------------- declaration of tasks 
+    ------------- declaration of tasks
     -----------------------------------------------------------------------
 
     task Prueba_Velocidad_Distancia is
@@ -47,7 +50,7 @@ package body fss is
       pragma Priority (5);
     end Prueba_Sensores_Piloto;
 
-    task Pitch_Roll is 
+    task Pitch_Roll is
       pragma Priority(5);
     end Pitch_Roll;
 
@@ -57,13 +60,13 @@ package body fss is
 
 
     -----------------------------------------------------------------------
-    ------------- body of tasks 
+    ------------- body of tasks
     -----------------------------------------------------------------------
     task body Prueba_Velocidad_Distancia is
       Current_Pw: Power_Samples_Type := 0;
-      Current_S: Speed_Samples_Type := 500; 
-      Calculated_S: Speed_Samples_type := 0; 
-            
+      Current_S: Speed_Samples_Type := 500;
+      Calculated_S: Speed_Samples_type := 0;
+
       Current_D: Distance_Samples_Type := 0;
       Current_L: Light_Samples_Type := 0;
       Aircraft_Roll: Roll_Samples_Type;
@@ -71,20 +74,20 @@ package body fss is
       ----ajustes del delay
       Siguiente_instance : Time;
       Intervalo : Time_Span := Milliseconds(300);
-              
+
       begin
         Siguiente_instance := Clock + Intervalo;
-        loop     
-          Start_Activity ("Prueba_Velocidad");        
-                   
-          -- Prueba potencia del piloto 
+        loop
+          Start_Activity ("Prueba_Velocidad");
+
+          -- Prueba potencia del piloto
           Read_Power (Current_Pw);  -- lee la potencia de motor indicada por el piloto
           Display_Pilot_Power (Current_Pw);
-                    
+
           -- transfiere la potencia/velocidad a la aeronave
           Calculated_S := Speed_Samples_type (float (Current_Pw) * 1.2); -- aplicar fórmula
-          
-          if (Calculated_S < 1000) then 
+
+          if (Calculated_S < 1000) then
             Set_Speed (Calculated_S);
             Light_1 (Off);
           elsif (Calculated_S > 1000) then
@@ -92,7 +95,7 @@ package body fss is
             Calculated_S := Speed_Samples_type (1000);
             Set_Speed (Calculated_S);
           end if;
-          
+
           -- Comprueba la velocidad real de la aeronave
           Current_S := Read_Speed;        -- lee la velocidad actual de la aeronave
           Display_Speed (Current_S);
@@ -110,12 +113,12 @@ package body fss is
             Aircraft_Roll := Read_Roll;
             Display_Roll (Aircraft_Roll);
           end if;
-          
+
 
           Display_Distance (Current_D);
-        
-                                
-        Finish_Activity ("Prueba_Velocidad");   
+
+
+        Finish_Activity ("Prueba_Velocidad");
         delay until (Siguiente_instance);
         Siguiente_instance := Siguiente_instance + Intervalo;
 
@@ -127,71 +130,69 @@ package body fss is
     task body Prueba_Altitud_Joystick is
       Current_J: Joystick_Samples_Type := (0,0);
       Target_Pitch: Pitch_Samples_Type := 0;
-      Target_Roll: Roll_Samples_Type := 0; 
-      Aircraft_Pitch: Pitch_Samples_Type; 
+      Target_Roll: Roll_Samples_Type := 0;
+      Aircraft_Pitch: Pitch_Samples_Type;
       Aircraft_Roll: Roll_Samples_Type;
-      
+
       Current_A: Altitude_Samples_Type := 8000;
 
       ----ajustes del delay
       Siguiente_instance : Time;
       Intervalo : Time_Span := Milliseconds(300);
-        
-    begin
-      Siguiente_instance := Clock + Intervalo;
-      loop     
-        Start_Activity ("Prueba_Altitud");
-        
-        -- Lee Joystick del piloto
-        Read_Joystick (Current_J);
-        
-        -- establece Pitch y Roll en la aeronave
-        Target_Pitch := Pitch_Samples_Type (Current_J(x));
-        Target_Roll := Roll_Samples_Type (Current_J(y));
 
-        if(Target_Pitch > 30) then
-          Set_Aircraft_Pitch (Pitch_Samples_Type (30));  -- transfiere el movimiento pitch a la aeronave
-        elsif (Target_Pitch < -30) then
-          Set_Aircraft_Pitch (Pitch_Samples_Type (-30));
-        else
-          Set_Aircraft_Pitch(Target_Pitch);
-        end if;
+      begin
+        Siguiente_instance := Clock + Intervalo;
+        loop
+          Start_Activity ("Prueba_Altitud");
+
+          -- Lee Joystick del piloto
+          Read_Joystick (Current_J);
+
+          -- establece Pitch y Roll en la aeronave
+          Target_Pitch := Pitch_Samples_Type (Current_J(x));
+          Target_Roll := Roll_Samples_Type (Current_J(y));
+
+          if(Target_Pitch > 30) then
+            Set_Aircraft_Pitch (Pitch_Samples_Type (30));  -- transfiere el movimiento pitch a la aeronave
+          elsif (Target_Pitch < -30) then
+            Set_Aircraft_Pitch (Pitch_Samples_Type (-30));
+          else
+            Set_Aircraft_Pitch(Target_Pitch);
+          end if;
 
 
-        if(Target_Roll > 45) then
-          Set_Aircraft_Roll (Roll_Samples_Type (45));    -- transfiere el movimiento roll  a la aeronave
-        elsif (Target_Roll < -45) then
-          Set_Aircraft_Roll (Roll_Samples_Type (-45));
-        else
-          Set_Aircraft_Roll(Target_Roll);
-        end if; 
+          if(Target_Roll > 45) then
+            Set_Aircraft_Roll (Roll_Samples_Type (45));    -- transfiere el movimiento roll  a la aeronave
+          elsif (Target_Roll < -45) then
+            Set_Aircraft_Roll (Roll_Samples_Type (-45));
+          else
+            Set_Aircraft_Roll(Target_Roll);
+          end if;
 
-                    
-        Aircraft_Pitch := Read_Pitch;       -- lee la posición pitch de la aeronave
-        Aircraft_Roll := Read_Roll;         -- lee la posición roll  de la aeronave
-        
-        Display_Joystick (Current_J);       -- muestra por display el joystick  
-        Display_Pitch (Aircraft_Pitch);     -- muestra por display la posición de la aeronave  
-        Display_Roll (Aircraft_Roll);
 
-        -- Comprueba altitud
-        Current_A := Read_Altitude;         -- lee y muestra por display la altitud de la aeronave  
-        Display_Altitude (Current_A);
-        
-        if(Current_A > 10000) then
-          Light_2 (On);
-        elsif (Current_A > 9000) then
-          Alarm (3); 
-          Display_Message ("To high");
-        end if;
+          Aircraft_Pitch := Read_Pitch;       -- lee la posición pitch de la aeronave
+          Aircraft_Roll := Read_Roll;         -- lee la posición roll  de la aeronave
 
-            
-        Finish_Activity ("Prueba_Altitud");                      
-        delay until (Siguiente_instance);
-        Siguiente_instance := Siguiente_instance + Intervalo;
-      end loop;
+          Display_Joystick (Current_J);       -- muestra por display el joystick
+          Display_Pitch (Aircraft_Pitch);     -- muestra por display la posición de la aeronave
+          Display_Roll (Aircraft_Roll);
 
-      
+          -- Comprueba altitud
+          Current_A := Read_Altitude;         -- lee y muestra por display la altitud de la aeronave
+          Display_Altitude (Current_A);
+
+          if(Current_A > 10000) then
+            Light_2 (On);
+          elsif (Current_A > 9000) then
+            Alarm (3);
+            Display_Message ("To high");
+          end if;
+
+
+          Finish_Activity ("Prueba_Altitud");
+          delay until (Siguiente_instance);
+          Siguiente_instance := Siguiente_instance + Intervalo;
+        end loop;
 
     end Prueba_Altitud_Joystick;
 
@@ -207,48 +208,52 @@ package body fss is
     begin
       Siguiente_instance := Clock + Intervalo;
       loop
-        Start_Activity ("Prueba_Piloto");                
+        Start_Activity ("Prueba_Piloto");
         -- Prueba presencia piloto
         Current_Pp := Read_PilotPresence;
-        if (Current_Pp = 0) then Alarm (1); end if;   
+        if (Current_Pp = 0) then Alarm (1); end if;
         Display_Pilot_Presence (Current_Pp);
-              
-        -- Prueba botón para selección de modo 
-        Current_Pb := Read_PilotButton;            
-        Display_Pilot_Button (Current_Pb); 
-        
-        Finish_Activity ("Prueba_Piloto");  
+
+        -- Prueba botón para selección de modo
+        Current_Pb := Read_PilotButton;
+        Display_Pilot_Button (Current_Pb);
+
+        Finish_Activity ("Prueba_Piloto");
         delay until (Siguiente_instance);
         Siguiente_instance := Siguiente_instance + Intervalo;
       end loop;
 
-      
+
 
     end Prueba_Sensores_Piloto;
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------
+--NOVEDADES
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
     task body Pitch_Roll is
       Current_J: Joystick_Samples_Type := (0,0);
       Target_Pitch: Pitch_Samples_Type := 0;
-      Target_Roll: Roll_Samples_Type := 0; 
-      Aircraft_Pitch: Pitch_Samples_Type; 
+      Target_Roll: Roll_Samples_Type := 0;
+      Aircraft_Pitch: Pitch_Samples_Type;
       Aircraft_Roll: Roll_Samples_Type;
-      
+
       Current_A: Altitude_Samples_Type := 8000;
 
       ----ajustes del delay
       Siguiente_instance : Time;
       Intervalo : Time_Span := Milliseconds(200);
     begin
-      -- 2.k 
+      -- 2.k
       Siguiente_instance := Clock + Intervalo;
-         loop     
+         loop
             Start_Activity ("Pitch_Roll");
-            
+
             -- Lee Joystick del piloto
             Read_Joystick (Current_J);
-            
+
             -- establece Pitch y Roll en la aeronave
 
             -- 1.g
@@ -271,10 +276,11 @@ package body fss is
             end if;
 
             --3.e
-            if(Target_Roll > 35) then 
+            if(Target_Roll > 35) then
                Display_Message("Alabeo en zona critica");
             elsif (Target_Roll < -35) then
-               Display_Message("Alabeo en zona critica")
+               Display_Message("Alabeo en zona critica");
+            end if;
 
             -- 1.h
             if(Target_Roll > 45) then
@@ -283,29 +289,29 @@ package body fss is
                Set_Aircraft_Roll (Roll_Samples_Type (-45));
             else
                Set_Aircraft_Roll(Target_Roll);
-            end if; 
+            end if;
 
-                        
+
             Aircraft_Pitch := Read_Pitch;       -- lee la posición pitch de la aeronave
             Aircraft_Roll := Read_Roll;         -- lee la posición roll  de la aeronave
-            
-            Display_Joystick (Current_J);       -- muestra por display el joystick  
-            Display_Pitch (Aircraft_Pitch);     -- muestra por display la posición de la aeronave  
+
+            Display_Joystick (Current_J);       -- muestra por display el joystick
+            Display_Pitch (Aircraft_Pitch);     -- muestra por display la posición de la aeronave
             Display_Roll (Aircraft_Roll);
 
             -- Comprueba altitud
-            Current_A := Read_Altitude;         -- lee y muestra por display la altitud de la aeronave  
+            Current_A := Read_Altitude;         -- lee y muestra por display la altitud de la aeronave
             Display_Altitude (Current_A);
-            
+
             if(Current_A > 10000) then
                Light_2 (On);
             elsif (Current_A > 9000) then
-               Alarm (3); 
+               Alarm (3);
                Display_Message ("To high");
             end if;
 
-                  
-            Finish_Activity ("Pitch_Roll");                      
+
+            Finish_Activity ("Pitch_Roll");
             delay until (Siguiente_instance);
             Siguiente_instance := Siguiente_instance + Intervalo;
          end loop;
@@ -315,16 +321,44 @@ package body fss is
 
 
    task body Altitude is
-      begin
+      Current_A: Altitude_Samples_Type := 8000;
+      ----ajustes del delay
+      Siguiente_instance : Time;
+      Intervalo : Time_Span := Milliseconds(200);
+    begin
+      Siguiente_instance := Clock + Intervalo;
+        loop
+          Start_Activity ("Pitch_Roll");
+          Current_A := Read_Altitude;
+
+          ---2.e
+          if(Current_A < 2500) then
+            Light_1(On);
+          end if;
+          --2.f 2.g
+          if (Current_A < 2000) then
+            -----NIVELARLO
+          end if;
+          --2.i 2.j
+          if(Current_A > 10000) then
+            ----NIVELARLO
+          elsif (Current_A > 9500) then  ---2.h
+            Light_1 (On);
+          end if;
+          Finish_Activity ("Altitud");
+          delay until (Siguiente_instance);
+          Siguiente_instance := Siguiente_instance + Intervalo;
+        end loop;
+
    end Altitude;
-    
+
 
 
     ----------------------------------------------------------------------
-    ------------- procedimientos para probar los dispositivos 
+    ------------- procedimientos para probar los dispositivos
     ------------- SE DEBERÁN QUITAR PARA EL PROYECTO
     ----------------------------------------------------------------------
-    
+
 
 begin
    Start_Activity ("Programa Principal");
@@ -333,6 +367,3 @@ begin
    --Prueba_Sensores_Piloto;
    Finish_Activity ("Programa Principal");
 end fss;
-
-
-
