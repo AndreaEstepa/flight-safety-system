@@ -227,7 +227,7 @@ package body fss is
     end Prueba_Sensores_Piloto;
 
 
-
+------------------------------------------------------------------------------------------------------------------------------------------
     task body Pitch_Roll is
       Current_J: Joystick_Samples_Type := (0,0);
       Target_Pitch: Pitch_Samples_Type := 0;
@@ -241,10 +241,10 @@ package body fss is
       Siguiente_instance : Time;
       Intervalo : Time_Span := Milliseconds(200);
     begin
-      -- 2.k
+      -- 2.k 
       Siguiente_instance := Clock + Intervalo;
          loop     
-            Start_Activity ("Prueba_Altitud");
+            Start_Activity ("Pitch_Roll");
             
             -- Lee Joystick del piloto
             Read_Joystick (Current_J);
@@ -269,6 +269,12 @@ package body fss is
             else
                Set_Aircraft_Pitch(Target_Pitch);
             end if;
+
+            --3.e
+            if(Target_Roll > 35) then 
+               Display_Message("Alabeo en zona critica");
+            elsif (Target_Roll < -35) then
+               Display_Message("Alabeo en zona critica")
 
             -- 1.h
             if(Target_Roll > 45) then
@@ -299,7 +305,7 @@ package body fss is
             end if;
 
                   
-            Finish_Activity ("Prueba_Altitud");                      
+            Finish_Activity ("Pitch_Roll");                      
             delay until (Siguiente_instance);
             Siguiente_instance := Siguiente_instance + Intervalo;
          end loop;

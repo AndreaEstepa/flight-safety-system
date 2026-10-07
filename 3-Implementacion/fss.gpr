@@ -1,0 +1,4 @@
+project FSS is
+   for Source_Dirs use ("include", "src");
+   for Main use ("main.adb");
+end FSS;
