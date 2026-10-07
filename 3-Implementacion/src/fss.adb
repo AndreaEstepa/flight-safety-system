@@ -11,7 +11,7 @@ with devicesFSS_V1; use devicesFSS_V1;
 -- with Ada.Interrupts.Names;
 -- with Button_Interrupt; use Button_Interrupt;
 
-package body fss is
+package body fss is 
 
     ----------------------------------------------------------------------
     ------------- procedure exported 
@@ -46,6 +46,14 @@ package body fss is
     task Prueba_Sensores_Piloto is
       pragma Priority (5);
     end Prueba_Sensores_Piloto;
+
+    task Pitch_Roll is 
+      pragma Priority(5);
+    end Pitch_Roll;
+
+    task Altitude is
+      pragma Priority(5);
+    end Altitude;
 
 
     -----------------------------------------------------------------------
@@ -219,6 +227,90 @@ package body fss is
     end Prueba_Sensores_Piloto;
 
 
+
+    task body Pitch_Roll is
+      Current_J: Joystick_Samples_Type := (0,0);
+      Target_Pitch: Pitch_Samples_Type := 0;
+      Target_Roll: Roll_Samples_Type := 0; 
+      Aircraft_Pitch: Pitch_Samples_Type; 
+      Aircraft_Roll: Roll_Samples_Type;
+      
+      Current_A: Altitude_Samples_Type := 8000;
+
+      ----ajustes del delay
+      Siguiente_instance : Time;
+      Intervalo : Time_Span := Milliseconds(200);
+    begin
+      -- 2.k
+      Siguiente_instance := Clock + Intervalo;
+         loop     
+            Start_Activity ("Prueba_Altitud");
+            
+            -- Lee Joystick del piloto
+            Read_Joystick (Current_J);
+            
+            -- establece Pitch y Roll en la aeronave
+
+            -- 1.g
+            if ((Current_J(x) < -3) or (Current_J(x) > 3)) then
+               Target_Pitch := Pitch_Samples_Type (Current_J(x));
+            end if;
+
+            if ((Current_J(y) < -3) or (Current_J(y) > 3)) then
+               Target_Roll := Roll_Samples_Type (Current_J(y));
+            end if;
+
+
+            -- 1.h y 2.d
+            if(Target_Pitch > 30) then
+               Set_Aircraft_Pitch (Pitch_Samples_Type (30));  -- transfiere el movimiento pitch a la aeronave
+            elsif (Target_Pitch < -30) then
+               Set_Aircraft_Pitch (Pitch_Samples_Type (-30));
+            else
+               Set_Aircraft_Pitch(Target_Pitch);
+            end if;
+
+            -- 1.h
+            if(Target_Roll > 45) then
+               Set_Aircraft_Roll (Roll_Samples_Type (45));    -- transfiere el movimiento roll  a la aeronave
+            elsif (Target_Roll < -45) then
+               Set_Aircraft_Roll (Roll_Samples_Type (-45));
+            else
+               Set_Aircraft_Roll(Target_Roll);
+            end if; 
+
+                        
+            Aircraft_Pitch := Read_Pitch;       -- lee la posición pitch de la aeronave
+            Aircraft_Roll := Read_Roll;         -- lee la posición roll  de la aeronave
+            
+            Display_Joystick (Current_J);       -- muestra por display el joystick  
+            Display_Pitch (Aircraft_Pitch);     -- muestra por display la posición de la aeronave  
+            Display_Roll (Aircraft_Roll);
+
+            -- Comprueba altitud
+            Current_A := Read_Altitude;         -- lee y muestra por display la altitud de la aeronave  
+            Display_Altitude (Current_A);
+            
+            if(Current_A > 10000) then
+               Light_2 (On);
+            elsif (Current_A > 9000) then
+               Alarm (3); 
+               Display_Message ("To high");
+            end if;
+
+                  
+            Finish_Activity ("Prueba_Altitud");                      
+            delay until (Siguiente_instance);
+            Siguiente_instance := Siguiente_instance + Intervalo;
+         end loop;
+
+
+    end Pitch_Roll;
+
+
+   task body Altitude is
+      begin
+   end Altitude;
     
 
 
