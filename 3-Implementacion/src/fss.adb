@@ -48,6 +48,15 @@ package body fss is
     end Prueba_Sensores_Piloto;
 
 
+   task Control_Velocidad_Task is
+      pragma Priority (5);
+   end Control_Velocidad_Task;
+
+   task Display_Task is
+      pragma Priority (4);
+   end Display_Task;
+
+
     -----------------------------------------------------------------------
     ------------- body of tasks 
     -----------------------------------------------------------------------
@@ -219,6 +228,80 @@ package body fss is
     end Prueba_Sensores_Piloto;
 
 
+   task body Control_Velocidad_Task is
+      Current_S: Speed_Samples_Type := 0; 
+      Calculated_S: Speed_Samples_type := 0;
+      Current_Pw: Power_Samples_Type := 0;
+            
+      Siguiente_instance : Time;
+      Intervalo : Time_Span := Milliseconds(300);
+              
+      begin
+        Siguiente_instance := Clock + Intervalo;
+        loop     
+          Start_Activity ("Control_Velocidad"); 
+          --1i + 4a
+          Read_Power (Current_Pw);
+          --4b
+          Calculated_S := Speed_Samples_type (float (Current_Pw) * 1.2);
+          --4c y 4d
+          if (Calculated_S > 1000) then 
+               Calculated_S := 1000;
+               Light_2 (On);
+          elsif Calculated_S < 1000 then
+               Light_2 (On);
+          else
+               Light_2 (Off);
+          end if;
+          Set_Speed (Calculated_S);
+          Finish_Activity ("Control_Velocidad");  
+          delay until (Siguiente_instance);
+          Siguiente_instance := Siguiente_instance + Intervalo;
+
+        end loop;
+
+    end Control_Velocidad_Task;
+
+
+   --7a
+   task body Display_Task is
+      Current_A: Altitude_Samples_Type := 0;
+      Current_Pw: Power_Samples_Type := 0;
+      Current_J: Joystick_Samples_Type := (0,0);
+      Current_S : Speed_Samples_Type := 0;
+      Pitch_N   : Pitch_Samples_Type;
+      Roll_N    : Roll_Samples_Type;
+      --ajustes del delay
+      Siguiente_instance : Time;
+      Intervalo : Time_Span := Milliseconds(1);
+      begin
+         Siguiente_instance := Clock + Intervalo;
+         loop     
+            Start_Activity ("Display_Monitor"); 
+
+            Current_A := Read_Altitude;
+            Read_Power (Current_Pw);
+            Current_S := Read_Speed;
+            Read_Joystick (Current_J);
+            Pitch_N := Read_Pitch;
+            Roll_N := Read_Roll;
+
+            Display_Pitch (Pitch_N);
+            Display_Roll (Roll_N);
+            Display_Altitude (Current_A);
+            Display_Speed (Current_S);
+            Display_Pilot_Power (Current_Pw);
+            Display_Joystick (Current_J);
+
+            Finish_Activity ("Display_Monitor");  
+            delay until (Siguiente_instance);
+            Siguiente_instance := Siguiente_instance + Intervalo;
+   
+         end loop;
+
+      end Display_Task;
+
+
     
 
 
@@ -227,7 +310,7 @@ package body fss is
     ------------- SE DEBERÁN QUITAR PARA EL PROYECTO
     ----------------------------------------------------------------------
     
-
+--1b las tareas arrancan automáticamente al iniciar el programa
 begin
    Start_Activity ("Programa Principal");
    --Prueba_Velocidad_Distancia;
