@@ -337,11 +337,13 @@ package body fss is
           end if;
           --2.f 2.g
           if (Current_A < 2000) then
-            -----NIVELARLO
+            Set_Aircraft_Pitch(0);
+            Set_Aircraft_Roll(0);
           end if;
           --2.i 2.j
           if(Current_A > 10000) then
-            ----NIVELARLO
+            Set_Aircraft_Pitch(0);
+            Set_Aircraft_Roll(0);
           elsif (Current_A > 9500) then  ---2.h
             Light_1 (On);
           end if;
