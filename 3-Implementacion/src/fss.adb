@@ -27,10 +27,14 @@ package body fss is
     ------------- declaration of protected objects
     -----------------------------------------------------------------------
 
-    protected Datos is
-
+    protected Maneuver_Data is
+        procedure Register_Maneuver (Actual_Pitch : in Pitch_Samples_Type; Actual_Roll : in Roll_Samples_Type);
+        procedure Maneuver_To_Speed (Initial_Speed : in Speed_Samples_Type; Final_Speed : out Speed_Samples_Type);
     private
-    end Datos;
+        Last_Roll : Roll_Samples_Type := 0;
+        Last_Pitch : Pitch_Samples_Type := 0;
+        Increased_Speed : Speed_Samples_Type := 0;
+    end Maneuver_Data;
 
 
 
@@ -253,11 +257,12 @@ package body fss is
           Read_Power (Current_Pw);
           --4b
           Calculated_S := Speed_Samples_type (float (Current_Pw) * 1.2);
+          Maneuver_Data.Maneuver_To_Speed(Calculated_S, Calculated_S); -- Llamada a la función del objeto protegido 
           --4c y 4d
           if (Calculated_S > 1000) then 
                Calculated_S := 1000;
                Light_2 (On);
-          elsif Calculated_S < 1000 then
+          elsif Calculated_S < 300 then
                Light_2 (On);
           else
                Light_2 (Off);
@@ -311,80 +316,7 @@ package body fss is
       end Display_Task;
 
 
-   task body Control_Velocidad_Task is
-      Current_S: Speed_Samples_Type := 0; 
-      Calculated_S: Speed_Samples_type := 0;
-      Current_Pw: Power_Samples_Type := 0;
-            
-      Siguiente_instance : Time;
-      Intervalo : Time_Span := Milliseconds(300);
-              
-      begin
-        Siguiente_instance := Clock + Intervalo;
-        loop     
-          Start_Activity ("Control_Velocidad"); 
-          --1i + 4a
-          Read_Power (Current_Pw);
-          --4b
-          Calculated_S := Speed_Samples_type (float (Current_Pw) * 1.2);
-          --4c y 4d
-          if (Calculated_S > 1000) then 
-               Calculated_S := 1000;
-               Light_2 (On);
-          elsif Calculated_S < 1000 then
-               Light_2 (On);
-          else
-               Light_2 (Off);
-          end if;
-          Set_Speed (Calculated_S);
-          Finish_Activity ("Control_Velocidad");  
-          delay until (Siguiente_instance);
-          Siguiente_instance := Siguiente_instance + Intervalo;
-
-        end loop;
-
-    end Control_Velocidad_Task;
-
-
-   --7a
-   task body Display_Task is
-      Current_A: Altitude_Samples_Type := 0;
-      Current_Pw: Power_Samples_Type := 0;
-      Current_J: Joystick_Samples_Type := (0,0);
-      Current_S : Speed_Samples_Type := 0;
-      Pitch_N   : Pitch_Samples_Type;
-      Roll_N    : Roll_Samples_Type;
-      --ajustes del delay
-      Siguiente_instance : Time;
-      Intervalo : Time_Span := Milliseconds(1);
-      begin
-         Siguiente_instance := Clock + Intervalo;
-         loop     
-            Start_Activity ("Display_Monitor"); 
-
-            Current_A := Read_Altitude;
-            Read_Power (Current_Pw);
-            Current_S := Read_Speed;
-            Read_Joystick (Current_J);
-            Pitch_N := Read_Pitch;
-            Roll_N := Read_Roll;
-
-            Display_Pitch (Pitch_N);
-            Display_Roll (Roll_N);
-            Display_Altitude (Current_A);
-            Display_Speed (Current_S);
-            Display_Pilot_Power (Current_Pw);
-            Display_Joystick (Current_J);
-
-            Finish_Activity ("Display_Monitor");  
-            delay until (Siguiente_instance);
-            Siguiente_instance := Siguiente_instance + Intervalo;
-   
-         end loop;
-
-      end Display_Task;
-
-
+  
 ------------------------------------------------------------------------------------------------------------------------------------------
 --NOVEDADES
 ------------------------------------------------------------------------------------------------------------------------------------------
@@ -411,6 +343,7 @@ package body fss is
             -- Lee Joystick del piloto
             Read_Joystick (Current_J);
 
+            Maneuver_Data.Register_Maneuver(Pitch_Samples_Type(Current_J(x)), Pitch_Samples_Type(Current_J(y)));
             -- establece Pitch y Roll en la aeronave
 
             -- 1.g
@@ -510,6 +443,45 @@ package body fss is
         end loop;
 
    end Altitude;
+
+   -- CUERPO OBJETOS PROTEGIDOS
+
+   protected body Maneuver_Data is 
+    procedure Register_Maneuver (Actual_Pitch : in Pitch_Samples_Type; Actual_Roll : in Roll_Samples_Type) is
+    begin
+
+       -- 4g He puesto and then para que no haga falta que mire ambas condiciones: si la primera es falsa deja de evaluar.
+      if ((abs(Last_Pitch) < abs(Actual_Pitch)) and then (abs(Last_Roll) < abs(Actual_Roll))) then
+        Increased_Speed := 200;
+
+      -- 4e 
+      elsif (abs(Last_Pitch) < abs(Actual_Pitch)) then
+        Increased_Speed := 150;
+
+      -- 4f
+      elsif (abs(Last_Roll) < abs(Actual_Roll)) then
+        Increased_Speed := 100;
+    
+      else
+        Increased_Speed := 0;
+      end if;
+
+      Last_Pitch := Actual_Pitch;
+      Last_Roll := Actual_Roll;
+
+    end Register_Maneuver;
+
+    procedure Maneuver_To_Speed (Initial_Speed : in Speed_Samples_Type; Final_Speed : out Speed_Samples_Type) is
+      begin
+        if ((Initial_Speed + Increased_Speed) <= 1000) then
+          Final_Speed := Initial_Speed + Increased_Speed;
+        else
+          Final_Speed := 1000;
+        end if;
+    end Maneuver_To_Speed;
+  end Maneuver_Data;
+
+  
 
 
 
