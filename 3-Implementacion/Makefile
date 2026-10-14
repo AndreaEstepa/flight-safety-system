@@ -27,7 +27,11 @@ $(TARGET): \
 	$(wildcard $(INCLUDE_DIR)/*.ads) \
 	$(wildcard $(TEST_DIR)/*.adb) \
 	$(GNAT_ADC) | $(BUILD_DIR)
-	$(GNATMAKE) $(MAIN_SRC) -I$(SRC_DIR) -I$(INCLUDE_DIR) -D $(BUILD_DIR) -o $(TARGET) -cargs $(GF) -bargs $(BF) -largs $(LF) -Xlinker -Map -Xlinker $(MAP_FILE)
+	$(GNATMAKE) \
+		$(MAIN_SRC) -I$(SRC_DIR) -I$(INCLUDE_DIR) -D $(BUILD_DIR) -o $(TARGET) \
+		-cargs $(GF) -bargs $(BF) -largs $(LF) \
+		-Xlinker -Map -Xlinker $(MAP_FILE) \
+		-gnatec=$(GNAT_ADC)
 	$(NM) $(TARGET) > $(NM_FILE)
 	$(SIZE) $(TARGET)
 
@@ -35,6 +39,9 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 clean: force
-	@rm -f $(BUILD_DIR)
+	@rm -f \
+		$(BUILD_DIR)/*.o $(BUILD_DIR)/*.nm $(BUILD_DIR)/*.ali \
+		$(BUILD_DIR)/b~*.* $(BUILD_DIR)/*.s $(BUILD_DIR)/*~ \
+		$(TARGET) $(MAP_FILE)
 
 force:
