@@ -1,47 +1,54 @@
-MAIN = main
-SRC_DIR = src
-INCLUDE_DIR = include
-BUILD_DIR = build
-TEST_DIR = test
+ROOT := $(abspath .)
 
-GNATMAKE = sparc-ork-gnatmake
-SIZE = sparc-ork-size
-NM = sparc-ork-nm
+MAIN := main
 
-GF = -g
-BF =
-LF = -k -specs ork_specs -mcpu=cypress
+SRC_DIR     := $(ROOT)/src
+INCLUDE_DIR := $(ROOT)/include
+TEST_DIR    := $(ROOT)/test
+BUILD_DIR   := $(ROOT)/build
+GNAT_ADC    := $(ROOT)/gnat.adc
 
-MAIN_SRC = $(SRC_DIR)/$(MAIN).adb
-TARGET = $(BUILD_DIR)/$(MAIN)
-MAP_FILE = $(BUILD_DIR)/$(MAIN).map
-NM_FILE = $(BUILD_DIR)/$(MAIN).nm
-GNAT_ADC = gnat.adc
+GNATMAKE := sparc-ork-gnatmake
+NM       := sparc-ork-nm
+SIZE     := sparc-ork-size
+
+BF :=
+GF := -g
+LF := -k -specs ork_specs -mcpu=cypress
+
+LF_LINK_FILE := -Xlinker -Map -Xlinker $(BUILD_DIR)/$(MAIN).map
+
+SOURCES = $(wildcard $(SRC_DIR)/*.adb) $(wildcard $(INCLUDE_DIR)/*.ads)
+
+TEST_SOURCES = $(wildcard $(TEST_DIR)/*.adb)
+TEST_TARGETS = $(patsubst $(TEST_DIR)/%.adb,$(BUILD_DIR)/%,$(TEST_SOURCES))
 
 .PHONY: all clean force
 
-all: $(TARGET)
+all: $(BUILD_DIR)/$(MAIN) $(TEST_TARGETS)
 
-$(TARGET): \
-	$(wildcard $(SRC_DIR)/*.adb) \
-	$(wildcard $(INCLUDE_DIR)/*.ads) \
-	$(wildcard $(TEST_DIR)/*.adb) \
-	$(GNAT_ADC) | $(BUILD_DIR)
-	$(GNATMAKE) \
-		$(MAIN_SRC) -I$(SRC_DIR) -I$(INCLUDE_DIR) -D $(BUILD_DIR) -o $(TARGET) \
-		-cargs $(GF) -bargs $(BF) -largs $(LF) \
-		-Xlinker -Map -Xlinker $(MAP_FILE) \
-		-gnatec=$(GNAT_ADC)
-	$(NM) $(TARGET) > $(NM_FILE)
-	$(SIZE) $(TARGET)
+$(BUILD_DIR)/$(MAIN): $(SOURCES) $(GNAT_ADC) | $(BUILD_DIR)/gnat.adc
+	cd $(BUILD_DIR) && $(GNATMAKE) $(SRC_DIR)/$(MAIN).adb \
+		-I$(SRC_DIR) -I$(INCLUDE_DIR) -o $(MAIN) \
+		-cargs $(GF) -bargs $(BF) -largs $(LF) $(LF_LINK_FILE)
+	$(NM) $@ > $@.nm
+	$(SIZE) $@
+
+$(BUILD_DIR)/%: $(TEST_DIR)/%.adb $(SOURCES) $(GNAT_ADC) | $(BUILD_DIR)/gnat.adc
+	cd $(BUILD_DIR) && $(GNATMAKE) $< \
+		-I$(SRC_DIR) -I$(INCLUDE_DIR) -I$(TEST_DIR) -o $(notdir $@) \
+		-cargs $(GF) -bargs $(BF) -largs $(LF)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+$(BUILD_DIR)/gnat.adc: $(GNAT_ADC) | $(BUILD_DIR)
+	cp $< $@
+
 clean: force
-	@rm -f \
-		$(BUILD_DIR)/*.o $(BUILD_DIR)/*.nm $(BUILD_DIR)/*.ali \
+	@rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/*.nm $(BUILD_DIR)/*.ali \
 		$(BUILD_DIR)/b~*.* $(BUILD_DIR)/*.s $(BUILD_DIR)/*~ \
-		$(TARGET) $(MAP_FILE)
+		$(BUILD_DIR)/$(MAIN) $(BUILD_DIR)/*.map \
+		$(BUILD_DIR)/gnat.adc $(TEST_TARGETS)
 
 force:
