@@ -343,7 +343,7 @@ package body fss is
             -- Lee Joystick del piloto
             Read_Joystick (Current_J);
 
-            Maneuver_Data.Register_Maneuver(Pitch_Samples_Type(Current_J(x)), Pitch_Samples_Type(Current_J(y)));
+            Maneuver_Data.Register_Maneuver(Pitch_Samples_Type(Current_J(x)), Roll_Samples_Type(Current_J(y)));
             -- establece Pitch y Roll en la aeronave
 
             -- 1.g
