@@ -1,42 +1,40 @@
-#-----------------------------------------------------------------------------
-#                               EXAMPLES  Makefile
-#-----------------------------------------------------------------------------
-
-# the Main program
 MAIN = main
+SRC_DIR = src
+INCLUDE_DIR = include
+BUILD_DIR = build
+TEST_DIR = test
 
-# the gnatmake
 GNATMAKE = sparc-ork-gnatmake
-
-# the size binutil
 SIZE = sparc-ork-size
-
-# the nm binutil
 NM = sparc-ork-nm
 
-# Gnat1 compilation flags
 GF = -g
-# Do not use optimization for debugging
-#GF = -O2
-
-# Gnatbind flags
 BF =
-
-# Gnatlink flags
 LF = -k -specs ork_specs -mcpu=cypress
-# Use the following to obtain a diagnostic link file
-LF_LINK_FILE = -Xlinker -Map -Xlinker $(MAIN).map
 
-#-----------------------------------------------------------------------------
-# Main rule
+MAIN_SRC = $(SRC_DIR)/$(MAIN).adb
+TARGET = $(BUILD_DIR)/$(MAIN)
+MAP_FILE = $(BUILD_DIR)/$(MAIN).map
+NM_FILE = $(BUILD_DIR)/$(MAIN).nm
+GNAT_ADC = gnat.adc
 
-all :   $(MAIN).adb
-	$(GNATMAKE) $(MAIN) -cargs $(GF) -bargs $(BF) -largs $(LF) $(LF_LINK_FILE)
-	$(NM) $(MAIN) > $(MAIN).nm
-	$(SIZE) $(MAIN)
+.PHONY: all clean force
 
-clean : force
-	@/bin/rm -f *.o *.nm *.ali b~*.* *.s *~ $(MAIN) *.map
+all: $(TARGET)
 
-force :
+$(TARGET): \
+	$(wildcard $(SRC_DIR)/*.adb) \
+	$(wildcard $(INCLUDE_DIR)/*.ads) \
+	$(wildcard $(TEST_DIR)/*.adb) \
+	$(GNAT_ADC) | $(BUILD_DIR)
+	$(GNATMAKE) $(MAIN_SRC) -I$(SRC_DIR) -I$(INCLUDE_DIR) -D $(BUILD_DIR) -o $(TARGET) -cargs $(GF) -bargs $(BF) -largs $(LF) -Xlinker -Map -Xlinker $(MAP_FILE)
+	$(NM) $(TARGET) > $(NM_FILE)
+	$(SIZE) $(TARGET)
 
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+clean: force
+	@rm -f $(BUILD_DIR)
+
+force:
