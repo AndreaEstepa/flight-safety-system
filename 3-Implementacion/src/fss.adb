@@ -242,24 +242,24 @@ package body fss is
 
 
    task body Control_Velocidad_Task is
-      Current_S: Speed_Samples_Type := 0; 
+      Current_S: Speed_Samples_Type := 0;
       Calculated_S: Speed_Samples_type := 0;
       Current_Pw: Power_Samples_Type := 0;
-            
+
       Siguiente_instance : Time;
       Intervalo : Time_Span := Milliseconds(300);
-              
+
       begin
         Siguiente_instance := Clock + Intervalo;
-        loop     
-          Start_Activity ("Control_Velocidad"); 
+        loop
+          Start_Activity ("Control_Velocidad");
           --1i + 4a
           Read_Power (Current_Pw);
           --4b
           Calculated_S := Speed_Samples_type (float (Current_Pw) * 1.2);
-          Maneuver_Data.Maneuver_To_Speed(Calculated_S, Calculated_S); -- Llamada a la función del objeto protegido 
+          Maneuver_Data.Maneuver_To_Speed(Calculated_S, Calculated_S); -- Llamada a la función del objeto protegido
           --4c y 4d
-          if (Calculated_S > 1000) then 
+          if (Calculated_S > 1000) then
                Calculated_S := 1000;
                Light_2 (On);
           elsif Calculated_S < 300 then
@@ -268,7 +268,7 @@ package body fss is
                Light_2 (Off);
           end if;
           Set_Speed (Calculated_S);
-          Finish_Activity ("Control_Velocidad");  
+          Finish_Activity ("Control_Velocidad");
           delay until (Siguiente_instance);
           Siguiente_instance := Siguiente_instance + Intervalo;
 
@@ -290,8 +290,8 @@ package body fss is
       Intervalo : Time_Span := Milliseconds(1);
       begin
          Siguiente_instance := Clock + Intervalo;
-         loop     
-            Start_Activity ("Display_Monitor"); 
+         loop
+            Start_Activity ("Display_Monitor");
 
             Current_A := Read_Altitude;
             Read_Power (Current_Pw);
@@ -307,16 +307,16 @@ package body fss is
             Display_Pilot_Power (Current_Pw);
             Display_Joystick (Current_J);
 
-            Finish_Activity ("Display_Monitor");  
+            Finish_Activity ("Display_Monitor");
             delay until (Siguiente_instance);
             Siguiente_instance := Siguiente_instance + Intervalo;
-   
+
          end loop;
 
       end Display_Task;
 
 
-  
+
 ------------------------------------------------------------------------------------------------------------------------------------------
 --NOVEDADES
 ------------------------------------------------------------------------------------------------------------------------------------------
@@ -446,7 +446,7 @@ package body fss is
 
    -- CUERPO OBJETOS PROTEGIDOS
 
-   protected body Maneuver_Data is 
+   protected body Maneuver_Data is
     procedure Register_Maneuver (Actual_Pitch : in Pitch_Samples_Type; Actual_Roll : in Roll_Samples_Type) is
     begin
 
@@ -454,14 +454,14 @@ package body fss is
       if ((abs(Last_Pitch) < abs(Actual_Pitch)) and then (abs(Last_Roll) < abs(Actual_Roll))) then
         Increased_Speed := 200;
 
-      -- 4e 
+      -- 4e
       elsif (abs(Last_Pitch) < abs(Actual_Pitch)) then
         Increased_Speed := 150;
 
       -- 4f
       elsif (abs(Last_Roll) < abs(Actual_Roll)) then
         Increased_Speed := 100;
-    
+
       else
         Increased_Speed := 0;
       end if;
@@ -481,7 +481,7 @@ package body fss is
     end Maneuver_To_Speed;
   end Maneuver_Data;
 
-  
+
 
 
 
@@ -489,7 +489,7 @@ package body fss is
     ------------- procedimientos para probar los dispositivos
     ------------- SE DEBERÁN QUITAR PARA EL PROYECTO
     ----------------------------------------------------------------------
-    
+
 --1b las tareas arrancan automáticamente al iniciar el programa
 begin
    Start_Activity ("Programa Principal");
