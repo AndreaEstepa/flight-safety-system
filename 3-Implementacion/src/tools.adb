@@ -24,7 +24,7 @@ package body tools is
       -- Put_Line ("");
     end Current_Time;
 
-    procedure Print_Chrono is      
+    procedure Print_Chrono is
     begin
       Put_Line ("");
       Put ("[");
@@ -32,7 +32,7 @@ package body tools is
       Put ("] ");
       -- Put_Line ("");
     end Print_Chrono;
-    
+
 ---------------------------------------------------------------------
 --     PROCEDIMIENTO QUE SACA EL VALOR DE UN ENTERO POR LA UART    --
 ---------------------------------------------------------------------
@@ -50,7 +50,7 @@ package body tools is
 ---------------------------------------------------------------------
 
    procedure Print_a_Float (x : in float) is
-       type Float_Printable is digits 2; 
+       type Float_Printable is digits 2;
        nx: Float_Printable;
      begin
       --Put ("(");
@@ -62,11 +62,11 @@ package body tools is
    procedure Print_a_String (s: in String) is
    begin
       -- Current_Time (Big_Bang);
-      Print_Chrono;     
+      Print_Chrono;
       Put (" ");
       Put (s);
    end Print_a_String;
-   
+
 ---------------------------------------------------------------------
 --     PROCEDIMIENTO PARA AVISAR DEL ARRANQUE DE UNA TAREA         --
 ---------------------------------------------------------------------

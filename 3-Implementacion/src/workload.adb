@@ -117,7 +117,7 @@ package body Workload is
   -- Math library for TeleSoft TeleGen2 VAX/VMS -> MC68020:
   --
   --    with Math_Library;
-  -- 
+  --
   --    package Math is new Math_Library(Whet_Float);
   --    use Math;
   --
@@ -129,7 +129,7 @@ package body Workload is
   -- Math library for Verdix VADS VAX/VMS -> MC68020:
   --
   --    with Generic_Elementary_Functions;
-  -- 
+  --
   --    package Math is new Generic_Elementary_Functions(Whet_Float);
   --    use Math;
   --
@@ -149,7 +149,7 @@ package body Workload is
   -- Math library for Alsys Ada VAX/VMS -> MC68020:
   --
   --    with Math_Lib;
-  -- 
+  --
   --    package Math is new Math_Lib(Whet_Float);
   --    use Math;
   --
@@ -164,7 +164,7 @@ package body Workload is
   --
   --    with Math_Pack;
   --    use  Math_Pack;
-  -- 
+  --
   -- Natural logs (base e) = Ln(x);  base 10 logs = Log(x, 10.0).
   --
   -- Float'Digits = 6;  Long_Float'Digits = 15

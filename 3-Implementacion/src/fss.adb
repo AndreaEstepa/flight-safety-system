@@ -242,7 +242,7 @@ package body fss is
 
 
    task body Control_Velocidad_Task is
-      Current_S: Speed_Samples_Type := 0; 
+      Current_S: Speed_Samples_Type := 0;
       Base_Speed: Speed_Samples_type := 0;
       Calculated_S: Speed_Samples_type := 0;
       Current_Pw: Power_Samples_Type := 0;
@@ -258,9 +258,9 @@ package body fss is
           Read_Power (Current_Pw);
           --4b
           Base_Speed := Speed_Samples_type (float (Current_Pw) * 1.2);
-          Maneuver_Data.Maneuver_To_Speed(Base_Speed, Calculated_S); -- Llamada a la función del objeto protegido 
+          Maneuver_Data.Maneuver_To_Speed(Base_Speed, Calculated_S); -- Llamada a la función del objeto protegido
           --4c y 4d
-          if (Calculated_S >= 1000) then 
+          if (Calculated_S >= 1000) then
                Calculated_S := 1000;
                Light_2 (On);
           elsif Calculated_S <= 300 then
@@ -367,7 +367,7 @@ package body fss is
             elsif (Target_Pitch < -30) then
               Target_Pitch := Pitch_Samples_Type (-30);
             end if;
-            
+
             -- 1.h
             if(Target_Roll > 45) then
               Target_Roll := Roll_Samples_Type (45);
@@ -431,10 +431,10 @@ package body fss is
 
           if((Current_A > 9500) or (Current_A < 2500)) then ---2.h y 2.e
             Light_1 (On);
-          else 
+          else
             Light_1 (Off);
           end if;
-          
+
           Finish_Activity ("Altitud");
           delay until (Siguiente_instance);
           Siguiente_instance := Siguiente_instance + Intervalo;

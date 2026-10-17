@@ -1,7 +1,7 @@
 
 
 with Ada.Real_Time; use Ada.Real_Time;
-with System; use System; 
+with System; use System;
 
 package Button_interrupt is
 
