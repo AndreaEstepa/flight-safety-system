@@ -477,6 +477,7 @@ package body fss is
           Final_Speed := Initial_Speed + Increased_Speed;
         else
           Final_Speed := 1000;
+          Light_2 (On);
         end if;
     end Maneuver_To_Speed;
   end Maneuver_Data;
