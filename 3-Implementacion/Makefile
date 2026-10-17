@@ -46,7 +46,7 @@ $(BUILD_DIR)/gnat.adc: $(GNAT_ADC) | $(BUILD_DIR)
 	cp $< $@
 
 clean: force
-	@rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/*.nm $(BUILD_DIR)/*.ali \
+	@rm -rf $(BUILD_DIR)/*.o $(BUILD_DIR)/*.nm $(BUILD_DIR)/*.ali \
 		$(BUILD_DIR)/b~*.* $(BUILD_DIR)/*.s $(BUILD_DIR)/*~ \
 		$(BUILD_DIR)/$(MAIN) $(BUILD_DIR)/*.map \
 		$(BUILD_DIR)/gnat.adc $(TEST_TARGETS) $(BUILD_DIR)/*
