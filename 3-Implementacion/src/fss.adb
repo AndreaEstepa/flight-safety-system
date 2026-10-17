@@ -342,10 +342,10 @@ package body fss is
          loop
             Start_Activity ("Pitch_Roll");
 
-            -- Lee Joystick del piloto
+            -- Lee Joystick y altura
             Read_Joystick (Current_J);
+            Current_A := Read_Altitude;
 
-            Maneuver_Data.Register_Maneuver(Pitch_Samples_Type(Current_J(x)), Pitch_Samples_Type(Current_J(y)));
             -- establece Pitch y Roll en la aeronave
 
             -- 1.g
@@ -361,31 +361,36 @@ package body fss is
               Target_Roll := 0;
             end if;
 
-
             -- 1.h y 2.d
             if(Target_Pitch > 30) then
-               Set_Aircraft_Pitch (Pitch_Samples_Type (30));  -- transfiere el movimiento pitch a la aeronave
+              Target_Pitch := Pitch_Samples_Type (30);
             elsif (Target_Pitch < -30) then
-               Set_Aircraft_Pitch (Pitch_Samples_Type (-30));
-            else
-               Set_Aircraft_Pitch(Target_Pitch);
+              Target_Pitch := Pitch_Samples_Type (-30);
             end if;
-
-            --3.e
-            if(Target_Roll > 35) then
-               Display_Message("Alabeo en zona critica");
-            elsif (Target_Roll < -35) then
-               Display_Message("Alabeo en zona critica");
-            end if;
-
+            
             -- 1.h
             if(Target_Roll > 45) then
-               Set_Aircraft_Roll (Roll_Samples_Type (45));    -- transfiere el movimiento roll  a la aeronave
+              Target_Roll := Roll_Samples_Type (45);
             elsif (Target_Roll < -45) then
-               Set_Aircraft_Roll (Roll_Samples_Type (-45));
-            else
-               Set_Aircraft_Roll(Target_Roll);
+              Target_Roll := Roll_Samples_Type (-45);
             end if;
+
+            --2.f 2.g
+            if (Current_A <= 2000) then
+              Target_Pitch := Pitch_Samples_Type (0);
+              Target_Roll := Roll_Samples_Type (0);
+            end if;
+            --2.i 2.j
+            if(Current_A >= 10000) then
+              Target_Pitch := Pitch_Samples_Type (0);
+              Target_Roll := Roll_Samples_Type (0);
+            end if;
+
+            Maneuver_Data.Register_Maneuver(Target_Pitch, Target_Roll);
+            -------HAcer solo una vez el seteo
+            Set_Aircraft_Pitch (Target_Pitch);
+            Set_Aircraft_Roll (Target_Roll);
+
 
 
             Aircraft_Pitch := Read_Pitch;       -- lee la posición pitch de la aeronave
@@ -394,16 +399,13 @@ package body fss is
             Display_Joystick (Current_J);       -- muestra por display el joystick
             Display_Pitch (Aircraft_Pitch);     -- muestra por display la posición de la aeronave
             Display_Roll (Aircraft_Roll);
-
-            -- Comprueba altitud
-            Current_A := Read_Altitude;         -- lee y muestra por display la altitud de la aeronave
             Display_Altitude (Current_A);
 
-            if(Current_A > 10000) then
-               Light_2 (On);
-            elsif (Current_A > 9000) then
-               Alarm (3);
-               Display_Message ("To high");
+            --3.e
+            if(Aircraft_Roll > 35) then
+               Display_Message("Alabeo en zona critica");
+            elsif (Aircraft_Roll < -35) then
+               Display_Message("Alabeo en zona critica");
             end if;
 
 
@@ -424,25 +426,15 @@ package body fss is
     begin
       Siguiente_instance := Clock + Intervalo;
         loop
-          Start_Activity ("Pitch_Roll");
+          Start_Activity ("Altitude");
           Current_A := Read_Altitude;
 
-          ---2.e
-          if(Current_A < 2500) then
-            Light_1(On);
-          end if;
-          --2.f 2.g
-          if (Current_A < 2000) then
-            Set_Aircraft_Pitch(0);
-            Set_Aircraft_Roll(0);
-          end if;
-          --2.i 2.j
-          if(Current_A > 10000) then
-            Set_Aircraft_Pitch(0);
-            Set_Aircraft_Roll(0);
-          elsif (Current_A > 9500) then  ---2.h
+          if((Current_A > 9500) or (Current_A < 2500)) then ---2.h y 2.e
             Light_1 (On);
+          else 
+            Light_1 (Off);
           end if;
+          
           Finish_Activity ("Altitud");
           delay until (Siguiente_instance);
           Siguiente_instance := Siguiente_instance + Intervalo;
