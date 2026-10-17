@@ -243,6 +243,7 @@ package body fss is
 
    task body Control_Velocidad_Task is
       Current_S: Speed_Samples_Type := 0; 
+      Base_Speed: Speed_Samples_type := 0;
       Calculated_S: Speed_Samples_type := 0;
       Current_Pw: Power_Samples_Type := 0;
             
@@ -256,13 +257,14 @@ package body fss is
           --1i + 4a
           Read_Power (Current_Pw);
           --4b
-          Calculated_S := Speed_Samples_type (float (Current_Pw) * 1.2);
-          Maneuver_Data.Maneuver_To_Speed(Calculated_S, Calculated_S); -- Llamada a la función del objeto protegido 
+          Base_Speed := Speed_Samples_type (float (Current_Pw) * 1.2);
+          Maneuver_Data.Maneuver_To_Speed(Base_Speed, Calculated_S); -- Llamada a la función del objeto protegido 
           --4c y 4d
-          if (Calculated_S > 1000) then 
+          if (Calculated_S >= 1000) then 
                Calculated_S := 1000;
                Light_2 (On);
-          elsif Calculated_S < 300 then
+          elsif Calculated_S <= 300 then
+               Calculated_S := 300;
                Light_2 (On);
           else
                Light_2 (Off);
@@ -287,7 +289,7 @@ package body fss is
       Roll_N    : Roll_Samples_Type;
       --ajustes del delay
       Siguiente_instance : Time;
-      Intervalo : Time_Span := Milliseconds(1);
+      Intervalo : Time_Span := Milliseconds(1000);
       begin
          Siguiente_instance := Clock + Intervalo;
          loop     
@@ -348,11 +350,15 @@ package body fss is
 
             -- 1.g
             if ((Current_J(x) < -3) or (Current_J(x) > 3)) then
-               Target_Pitch := Pitch_Samples_Type (Current_J(x));
+              Target_Pitch := Pitch_Samples_Type (Current_J(x));
+            else
+              Target_Pitch := 0;
             end if;
 
             if ((Current_J(y) < -3) or (Current_J(y) > 3)) then
                Target_Roll := Roll_Samples_Type (Current_J(y));
+            else
+              Target_Roll := 0;
             end if;
 
 
@@ -477,7 +483,6 @@ package body fss is
           Final_Speed := Initial_Speed + Increased_Speed;
         else
           Final_Speed := 1000;
-          Light_2 (On);
         end if;
     end Maneuver_To_Speed;
   end Maneuver_Data;
