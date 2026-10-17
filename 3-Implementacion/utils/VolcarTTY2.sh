@@ -19,8 +19,8 @@ $PROGRAM | while IFS= read -r line; do
       if echo "$line" | grep -q "%"; then
         # Volcar al tty2 si la línea contiene un %
         echo "$line" > /dev/pts/2
-      else      
-        # Volcar al tty0 si la línea no contiene ni # ni % 
+      else
+        # Volcar al tty0 si la línea no contiene ni # ni %
         echo "$line" > /dev/pts/0
       fi
     fi
